@@ -48,10 +48,26 @@ async function adminFetch(path: string, options: RequestInit = {}) {
 }
 
 export async function createUser(email: string, password: string) {
-  return adminFetch("/api/user/", {
+  const username = email.split("@")[0];
+  const result = await adminFetch("/api/user/", {
     method: "POST",
-    body: JSON.stringify({ username: email.split('@')[0], password, display_name: email.split("@")[0] }),
+    body: JSON.stringify({ username, password, display_name: username }),
   });
+  
+  if (!result.success) {
+    return { success: false, message: result.message || "Failed to create user" };
+  }
+  
+  // One-API create user doesnt return the ID, look it up
+  const users = await adminFetch("/api/user/?p=0&page_size=50");
+  if (users.success && users.data) {
+    const found = users.data.find((u: any) => u.username === username);
+    if (found) {
+      return { success: true, data: { id: found.id } };
+    }
+  }
+  
+  return { success: false, message: "User created but ID not found" };
 }
 
 export async function createToken(userId: number, name: string, quota: number = 1000000) {
