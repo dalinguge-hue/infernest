@@ -1,10 +1,12 @@
+"use client";
 import Link from "next/link";
+import { useState } from "react";
 
 const models = [
-  { name: "DeepSeek V4 Flash", input: 0.27, output: 1.10, context: "128K", speed: "~80 t/s" },
-  { name: "Qwen 3.6 27B", input: 0.20, output: 0.40, context: "128K", speed: "~120 t/s" },
-  { name: "GLM 5.2", input: 0.14, output: 0.14, context: "128K", speed: "~90 t/s" },
-  { name: "Doubao Pro 256K", input: 0.10, output: 0.30, context: "256K", speed: "~100 t/s" },
+  { name: "DeepSeek V4 Flash", input: 0.27, output: 1.10, context: "128K", speed: "~80 t/s", available: true },
+  { name: "Qwen 3.6 27B", input: 0.20, output: 0.40, context: "128K", speed: "~120 t/s", available: false },
+  { name: "GLM 5.2", input: 0.14, output: 0.14, context: "128K", speed: "~90 t/s", available: false },
+  { name: "Doubao Pro 256K", input: 0.10, output: 0.30, context: "256K", speed: "~100 t/s", available: false },
 ];
 
 const comparison = [
@@ -15,12 +17,52 @@ const comparison = [
 
 const faq = [
   { q: "Where are the models hosted?", a: "Our inference runs on servers in Hong Kong and Singapore, optimized for low-latency access to Chinese frontier models." },
-  { q: "Is this OpenAI API compatible?", a: "Yes — change base_url to ours and your existing OpenAI SDK code works unchanged." },
+  { q: "Is this OpenAI API compatible?", a: "Yes. Change base_url to https://infernest.xyz/v1 and your existing OpenAI SDK code works unchanged." },
   { q: "What about data privacy?", a: "We do not store prompts or completions. Logs are retained for 7 days for billing only, then purged." },
   { q: "How reliable is this?", a: "We run multiple redundant upstream channels per model with automatic failover. Our uptime target is 99.5%+." },
 ];
 
+const codeExamples = {
+  python: `from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://infernest.xyz/v1",
+    api_key="YOUR_API_KEY"
+)
+
+response = client.chat.completions.create(
+    model="deepseek-chat",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+print(response.choices[0].message.content)`,
+  node: `import OpenAI from "openai";
+
+const client = new OpenAI({
+    baseURL: "https://infernest.xyz/v1",
+    apiKey: "YOUR_API_KEY"
+});
+
+const response = await client.chat.completions.create({
+    model: "deepseek-chat",
+    messages: [{ role: "user", content: "Hello!" }]
+});
+console.log(response.choices[0].message.content);`,
+  curl: `curl https://infernest.xyz/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -d '{"model":"deepseek-chat","messages":[{"role":"user","content":"Hello!"}]}'`
+};
+
 export default function HomePage() {
+  const [codeLang, setCodeLang] = useState<"python" | "node" | "curl">("python");
+  const [copied, setCopied] = useState(false);
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(codeExamples[codeLang]);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div>
       {/* Hero */}
@@ -39,12 +81,58 @@ export default function HomePage() {
             View Models
           </Link>
         </div>
-        <p className="text-xs text-slate-600 mt-4">No credit card required. $1 free credit on signup.</p>
+
+        {/* Stats Bar */}
+        <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto mt-12">
+          {[
+            { value: "1", label: "Models Live", sub: "3 more coming" },
+            { value: "99.5%", label: "Uptime", sub: "30-day average" },
+            { value: "< 500ms", label: "Latency", sub: "p50 response time" },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-[#1e293b]/50 border border-slate-700/30 rounded-xl p-4">
+              <div className="text-2xl font-bold text-white">{stat.value}</div>
+              <div className="text-xs text-slate-400 mt-0.5">{stat.label}</div>
+              <div className="text-[10px] text-slate-600 mt-1">{stat.sub}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Code Quick Start */}
+      <section className="max-w-3xl mx-auto px-6 pb-20">
+        <h2 className="text-2xl font-bold text-center mb-6">Start in 3 lines</h2>
+        <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2 bg-[#0f172a] border-b border-slate-700/50">
+            <div className="flex gap-1">
+              {(["python", "node", "curl"] as const).map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setCodeLang(lang)}
+                  className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                    codeLang === lang ? "bg-brand/20 text-brand-light" : "text-slate-500 hover:text-slate-300"
+                  }`}
+                >
+                  {lang === "python" ? "Python" : lang === "node" ? "Node.js" : "cURL"}
+                </button>
+              ))}
+            </div>
+            <button onClick={copyCode} className="text-xs text-slate-500 hover:text-white transition-colors">
+              {copied ? "Copied!" : "Copy"}
+            </button>
+          </div>
+          <pre className="p-5 text-sm overflow-x-auto">
+            <code className="text-slate-300 font-mono text-xs leading-relaxed">{codeExamples[codeLang]}</code>
+          </pre>
+        </div>
+        <p className="text-center text-xs text-slate-600 mt-3">
+          Replace YOUR_API_KEY with the key from your dashboard after signing up.
+        </p>
       </section>
 
       {/* Price Comparison */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
-        <h2 className="text-2xl font-bold text-center mb-8">Price Comparison <span className="text-slate-500 text-base font-normal">(per 1M tokens)</span></h2>
+        <h2 className="text-2xl font-bold text-center mb-2">Price Comparison</h2>
+        <p className="text-slate-500 text-sm text-center mb-8">per 1M tokens</p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -72,10 +160,16 @@ export default function HomePage() {
 
       {/* Models Grid */}
       <section className="max-w-6xl mx-auto px-6 pb-20">
-        <h2 className="text-2xl font-bold text-center mb-8">Available Models</h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-bold">Available Models</h2>
+          <Link href="/models" className="text-sm text-brand-light hover:underline">View all &rarr;</Link>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {models.map((m) => (
-            <div key={m.name} className="bg-[#1e293b] border border-slate-700/50 rounded-lg p-5 hover:border-slate-600 transition-colors">
+            <div key={m.name} className={`bg-[#1e293b] border rounded-lg p-5 transition-colors relative ${m.available ? "border-slate-700/50 hover:border-slate-600" : "border-slate-700/20 opacity-60"}`}>
+              {!m.available && (
+                <span className="absolute top-3 right-3 bg-slate-700 text-slate-400 text-[10px] font-medium px-2 py-0.5 rounded-full">Soon</span>
+              )}
               <h3 className="font-semibold text-white mb-3">{m.name}</h3>
               <div className="space-y-1.5 text-sm text-slate-400">
                 <div className="flex justify-between"><span>Input</span><span className="font-mono text-slate-300">${m.input}/1M</span></div>
@@ -93,7 +187,7 @@ export default function HomePage() {
         <h2 className="text-2xl font-bold text-center mb-10">How It Works</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { step: "1", title: "Sign Up", desc: "Create an account and get your API key instantly. $1 free credit to start." },
+            { step: "1", title: "Sign Up", desc: "Create an account and get your API key instantly. Free credit to start." },
             { step: "2", title: "Pick a Model", desc: "Choose from DeepSeek, Qwen, GLM, Doubao — all via the same endpoint." },
             { step: "3", title: "Call the API", desc: "Drop our base_url into your OpenAI SDK. Your existing code works unchanged." },
           ].map((s) => (
@@ -111,8 +205,8 @@ export default function HomePage() {
         <h2 className="text-2xl font-bold text-center mb-8">FAQ</h2>
         <div className="space-y-4">
           {faq.map((item, i) => (
-            <details key={i} className="bg-[#1e293b] border border-slate-700/50 rounded-lg p-5 group">
-              <summary className="font-medium cursor-pointer list-none text-slate-200">{item.q}</summary>
+            <details key={i} className="bg-[#1e293b] border border-slate-700/50 rounded-lg p-5 group cursor-pointer">
+              <summary className="font-medium list-none text-slate-200">{item.q}</summary>
               <p className="mt-3 text-sm text-slate-400 leading-relaxed">{item.a}</p>
             </details>
           ))}
@@ -126,7 +220,7 @@ export default function HomePage() {
         <Link href="/auth/signup" className="bg-brand hover:bg-brand-dark text-white px-8 py-3 rounded-lg font-semibold transition-colors inline-block">
           Get Started Free
         </Link>
-        <p className="text-xs text-slate-600 mt-8">© 2026 InferNest. Built for developers who care about cost.</p>
+        <p className="text-xs text-slate-600 mt-8">&copy; 2026 InferNest. Built for developers who care about cost.</p>
       </section>
     </div>
   );
