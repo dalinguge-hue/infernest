@@ -31,6 +31,10 @@ export async function POST(req: NextRequest) {
   const Stripe = (await import("stripe")).default;
   const stripe = new Stripe(STRIPE_SECRET);
 
+  const origin = req.nextUrl.origin;
+  const successUrl = origin + "/dashboard/billing?session_id={CHECKOUT_SESSION_ID}";
+  const cancelUrl = origin + "/dashboard/billing?cancelled=1";
+
   const session = await stripe.checkout.sessions.create({
     line_items: [
       {
@@ -38,7 +42,7 @@ export async function POST(req: NextRequest) {
           currency: "usd",
           product_data: {
             name: "InferNest API Credits",
-            description: `${(amount * 500000).toLocaleString()} tokens`,
+            description: (amount * 500000).toLocaleString() + " tokens",
           },
           unit_amount: amountInCents,
         },
@@ -46,9 +50,9 @@ export async function POST(req: NextRequest) {
       },
     ],
     mode: "payment",
-    success_url: ${req.nextUrl.origin}/dashboard/billing?session_id={CHECKOUT_SESSION_ID},
-    cancel_url: `${req.nextUrl.origin}/dashboard/billing?cancelled=1`,
-    client_reference_id: `user_${userId}_${amount}`,
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    client_reference_id: "user_" + userId + "_" + amount,
     metadata: {
       user_id: String(userId),
       tokens: String(amount * 500000),
