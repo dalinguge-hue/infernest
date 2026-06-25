@@ -1,5 +1,5 @@
 {
   "rewrites": [
-    { "source": "/v1/:path*", "destination": "http://38.47.102.235:3000/v1/:path*" }
+    { "source": "/v1/:path*", "destination": "http://38.47.102.235/v1/:path*" }
   ]
 }
