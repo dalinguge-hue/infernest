@@ -6,6 +6,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, 
 export default function DashboardPage() {
   const [keyVisible, setKeyVisible] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [refCopied, setRefCopied] = useState(false);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,6 +32,12 @@ export default function DashboardPage() {
     );
   }
 
+    const copyRef = () => {
+    navigator.clipboard.writeText('https://infernest.xyz/auth/signup?ref=' + (data?.affCode || ''));
+    setRefCopied(true);
+    setTimeout(() => setRefCopied(false), 2000);
+  };
+
   const copyKey = () => {
     navigator.clipboard.writeText(data?.apiKey || "");
     setCopied(true);
@@ -41,10 +48,7 @@ export default function DashboardPage() {
   const usedTokens = data.usedQuota || 0;
   const totalQuota = data.quota || 0;
 
-  const usageData = Array.from({ length: 30 }, (_, i) => ({
-    day: new Date(Date.now() - (29 - i) * 86400000).toLocaleDateString("en", { month: "short", day: "numeric" }),
-    tokens: usedTokens > 0 ? Math.floor(usedTokens / 30) : Math.floor(Math.random() * 500000 + 200000),
-  }));
+const usageData = data.dailyUsage && data.dailyUsage.length > 0 ? data.dailyUsage : Array.from({ length: 30 }, (_, i) => ({ day: new Date(Date.now() - (29 - i) * 86400000).toLocaleDateString("en", { month: "short", day: "numeric" }), tokens: 0 }));
 
   const modelData = [
     { name: "DeepSeek V4 Flash", value: 100, color: "#3b82f6" },
@@ -124,6 +128,24 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+            {data.affCode && (
+        <div className="mb-8 bg-[#1e293b] border border-brand/20 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-sm">Referral Program</h3>
+            <span className="text-xs text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">Earn 10%</span>
+          </div>
+          <p className="text-xs text-slate-400 mb-3">Share your link. When friends sign up and buy credits, you get 10% of their payment in free tokens.</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs text-slate-300 bg-[#0f172a] rounded-lg px-3 py-2 font-mono truncate">
+              https://infernest.xyz/auth/signup?ref={data.affCode}
+            </code>
+            <button onClick={copyRef} className="bg-brand hover:bg-brand-dark text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors shrink-0">
+              {refCopied ? "Copied!" : "Copy Link"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link href="/dashboard/keys" className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5 hover:border-slate-600 transition-colors">

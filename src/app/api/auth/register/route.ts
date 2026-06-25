@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createUser, createToken } from "@/lib/oneapi";
+import { createUser, createToken, getUserInfo } from "@/lib/oneapi";
 import * as jose from "jose";
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -8,10 +8,10 @@ const JWT_SECRET = new TextEncoder().encode(
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
-    console.log("[register] Creating user:", email);
+    const { email, password, refCode } = await req.json();
+    console.log("[register] Creating user:", email, "ref:", refCode);
 
-    const userResult = await createUser(email, password);
+    const userResult = await createUser(email, password, refCode);
     if (!userResult.success) {
       return NextResponse.json({ error: userResult.message || "Failed to create user" }, { status: 400 });
     }
@@ -21,15 +21,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User created but no ID returned" }, { status: 500 });
     }
 
-    // Create token using user's own session (fixes token ownership bug)
+    // Get user's aff_code
+    let affCode = "";
+    try {
+      const info = await getUserInfo(userId);
+      if (info.success && info.data) {
+        affCode = info.data.aff_code || "";
+      }
+    } catch {}
+
+    // Create token using user's own session
     const tokenResult = await createToken(email, password);
     const key = tokenResult.data?.key || "";
 
-    // Create JWT for auto-login
     const jwt = await new jose.SignJWT({
       userId,
       username: email.split("@")[0],
       apiKey: key,
+      affCode,
     })
       .setProtectedHeader({ alg: "HS256" })
       .setExpirationTime("7d")
@@ -39,6 +48,7 @@ export async function POST(req: NextRequest) {
       success: true,
       userId,
       apiKey: key,
+      affCode,
     });
 
     response.cookies.set("infernest_token", jwt, {

@@ -71,6 +71,27 @@ export async function GET(req: NextRequest) {
       signal: AbortSignal.timeout(8000),
     });
 
+        // Referral bonus: give 10% to referrer
+    const inviterId = user?.inviter_id;
+    if (inviterId && inviterId > 0) {
+      const bonus = Math.floor(tokensToAdd * 0.1);
+      const refRes = await fetch(ONEAPI_URL + "/api/user/?id=" + inviterId, {
+        headers: { Cookie: "session=" + adminSession },
+        signal: AbortSignal.timeout(8000),
+      });
+      const refData = await refRes.json();
+      const refUsers = Array.isArray(refData.data) ? refData.data : [refData.data];
+      const refUser = refUsers.find((u: any) => u.id === inviterId);
+      const refQuota = refUser?.quota || 0;
+      await fetch(ONEAPI_URL + "/api/user/", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Cookie: "session=" + adminSession },
+        body: JSON.stringify({ id: inviterId, quota: refQuota + bonus }),
+        signal: AbortSignal.timeout(8000),
+      });
+      console.log("[verify] Referral bonus: " + bonus + " tokens to user " + inviterId);
+    }
+
     return NextResponse.json({ success: true, quota: newQuota });
   } catch (e: any) {
     console.error("[verify] Failed:", e.message);

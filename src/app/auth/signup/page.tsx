@@ -1,13 +1,17 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function SignupPage() {
+  const searchParams = useSearchParams();
+  const refCode = searchParams.get("ref") || "";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [apiKey, setApiKey] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [affCode, setAffCode] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,12 +22,13 @@ export default function SignupPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, refCode }),
       });
       const data = await res.json();
       
       if (data.success && data.apiKey) {
         setApiKey(data.apiKey);
+        if (data.affCode) setAffCode(data.affCode);
         setStatus("done");
       } else {
         setErrorMsg(data.error || "Registration failed");
@@ -50,6 +55,13 @@ export default function SignupPage() {
         >
           Copy to Clipboard
         </button>
+        {affCode && (
+          <div className="mt-4 bg-brand/5 border border-brand/20 rounded-lg p-4 text-left">
+            <div className="text-xs text-brand-light font-medium mb-1">Your Referral Code</div>
+            <div className="text-xs text-slate-400 mb-2">Share this link to earn 10% of your friends' payments:</div>
+            <code className="text-brand-light text-xs break-all font-mono">https://infernest.xyz/auth/signup?ref={affCode}</code>
+          </div>
+        )}
         <br />
         <Link href="/dashboard" className="text-brand-light hover:underline text-sm">Go to Dashboard &rarr;</Link>
       </div>
@@ -60,7 +72,11 @@ export default function SignupPage() {
     <div className="max-w-md mx-auto px-6 py-24">
       <h1 className="text-2xl font-bold mb-2">Create Account</h1>
       <p className="text-slate-400 mb-8 text-sm">Get your API key in 30 seconds.</p>
-      
+      {refCode && (
+        <div className="bg-brand/5 border border-brand/20 rounded-lg p-3 mb-4 text-xs text-brand-light">
+          You've been referred! You'll get bonus credits on your first purchase.
+        </div>
+      )}
       {status === "error" && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4 text-sm text-red-400">{errorMsg}</div>
       )}

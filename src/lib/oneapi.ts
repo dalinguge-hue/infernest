@@ -43,11 +43,11 @@ async function adminFetch(path: string, options: RequestInit = {}) {
   return data;
 }
 
-export async function createUser(email: string, password: string) {
+export async function createUser(email: string, password: string, refCode?: string) {
   const username = email.split("@")[0];
   const result = await adminFetch("/api/user/", {
     method: "POST",
-    body: JSON.stringify({ username, password, display_name: username }),
+    body: JSON.stringify({ username, password, display_name: username, ...(refCode ? { inviter_code: refCode } : {}) }),
   });
   
   if (!result.success) {
