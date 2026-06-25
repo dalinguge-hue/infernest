@@ -23,6 +23,7 @@ export default function BillingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState(50);
   const [selectedWire, setSelectedWire] = useState(100);
+  const [showWire, setShowWire] = useState(false);
   const verified = useRef(false);
 
   useEffect(() => {
@@ -111,6 +112,16 @@ export default function BillingPage() {
     { amount: 50, tokens: "25M", popular: true },
     { amount: 100, tokens: "50M", popular: false },
     { amount: 500, tokens: "250M", popular: false },
+  ];
+
+  const bankFields = [
+    ["Bank", bankInfo.bank],
+    ["Address", bankInfo.address],
+    ["Routing (ABA)", bankInfo.routing],
+    ["SWIFT", bankInfo.swift],
+    ["Account", bankInfo.account],
+    ["Type", bankInfo.type],
+    ["Beneficiary", bankInfo.beneficiary],
   ];
 
   return (
@@ -208,35 +219,35 @@ export default function BillingPage() {
           <div>
             <h2 className="text-lg font-semibold mb-4">Bank Transfer (USD)</h2>
             <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-6">
-              <div className="space-y-3 mb-4 text-sm">
-                {[
-                  ["Bank", bankInfo.bank],
-                  ["Address", bankInfo.address],
-                  ["Routing (ABA)", bankInfo.routing],
-                  ["SWIFT", bankInfo.swift],
-                  ["Account", bankInfo.account],
-                  ["Type", bankInfo.type],
-                  ["Beneficiary", bankInfo.beneficiary],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex justify-between items-center gap-3">
-                    <span className="text-slate-500 text-xs shrink-0">{label}</span>
-                    <span className="text-slate-300 text-xs font-mono text-right truncate">{value}</span>
-                    <button onClick={() => copyText(value, label)} className="text-brand-light text-xs hover:underline shrink-0">
-                      {copied === label ? "Copied" : "Copy"}
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <div className="border-t border-slate-700 pt-4">
-                <div className="text-xs text-slate-400 mb-2">Paste transfer reference or note:</div>
-                <input type="text" placeholder="Transfer reference / note" value={txid} onChange={(e) => setTxid(e.target.value)} className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-600 mb-3 focus:outline-none focus:border-brand" />
-                <button onClick={handleWireSubmit} disabled={!selectedWire || !txid || submitting} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white py-2 rounded-lg text-sm font-medium transition-colors">
-                  {submitting ? "Submitting..." : "I've Sent the Payment"}
+              {!showWire ? (
+                <button onClick={() => setShowWire(true)} className="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 py-3 rounded-lg text-sm font-medium transition-colors">
+                  Reveal Bank Details
                 </button>
-                <div className="text-[11px] text-slate-500 mt-3 text-center">
-                  Bank transfers take 1-3 business days. Credits added after funds clear.
+              ) : (
+                <div>
+                  <div className="space-y-3 text-sm">
+                    {bankFields.map(([label, value]) => (
+                      <div key={label} className="flex justify-between items-center gap-3">
+                        <span className="text-slate-500 text-xs shrink-0">{label}</span>
+                        <span className="text-slate-300 text-xs font-mono text-right truncate">{value}</span>
+                        <button onClick={() => copyText(value, label)} className="text-brand-light text-xs hover:underline shrink-0">
+                          {copied === label ? "Copied" : "Copy"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-slate-700 pt-4 mt-4">
+                    <div className="text-xs text-slate-400 mb-2">Paste transfer reference or note:</div>
+                    <input type="text" placeholder="Transfer reference / note" value={txid} onChange={(e) => setTxid(e.target.value)} className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-600 mb-3 focus:outline-none focus:border-brand" />
+                    <button onClick={handleWireSubmit} disabled={!selectedWire || !txid || submitting} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white py-2 rounded-lg text-sm font-medium transition-colors">
+                      {submitting ? "Submitting..." : "I've Sent the Payment"}
+                    </button>
+                    <div className="text-[11px] text-slate-500 mt-3 text-center">
+                      Bank transfers take 1-3 business days. Credits added after funds clear.
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
