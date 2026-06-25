@@ -15,7 +15,7 @@ export default function DocsPage() {
               <code className="text-slate-300">{`from openai import OpenAI
 
 client = OpenAI(
-    base_url="https://api.infernest.io/v1",
+    base_url="https://infernest.xyz/v1",
     api_key="sk-your-key-here"
 )
 
@@ -31,7 +31,7 @@ response = client.chat.completions.create(
               <code className="text-slate-300">{`import OpenAI from "openai";
 
 const client = new OpenAI({
-    baseURL: "https://api.infernest.io/v1",
+    baseURL: "https://infernest.xyz/v1",
     apiKey: "sk-your-key-here"
 });
 
@@ -44,7 +44,7 @@ const response = await client.chat.completions.create({
           <div>
             <p className="text-xs text-slate-500 mb-2 font-medium">curl</p>
             <pre className="bg-[#1e293b] border border-slate-700 rounded-lg p-4 text-sm overflow-x-auto">
-              <code className="text-slate-300">{`curl https://api.infernest.io/v1/chat/completions \\
+              <code className="text-slate-300">{`curl https://infernest.xyz/v1/chat/completions \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer sk-your-key-here" \\
   -d '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Hello!"}]}'`}</code>
@@ -106,3 +106,4 @@ const response = await client.chat.completions.create({
     </div>
   );
 }
+

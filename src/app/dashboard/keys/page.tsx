@@ -1,47 +1,53 @@
 "use client";
-import { useState } from "react";
-
-const mockKeys = [
-  { id: "sk-infr-a1b2c3", label: "Default", created: "2026-06-20", tokens: "12.4M", status: "active" },
-  { id: "sk-infr-d4e5f6", label: "Dev testing", created: "2026-06-22", tokens: "890K", status: "active" },
-];
+import Link from "next/link";
+import { useState, useEffect } from "react";
 
 export default function KeysPage() {
-  const [copied, setCopied] = useState<string | null>(null);
+  const [data, setData] = useState<any>(null);
+  const [keyVisible, setKeyVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const copyToClipboard = (key: string) => {
-    navigator.clipboard.writeText(key);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
+  useEffect(() => {
+    fetch("/api/me").then(r => r.json()).then(setData).catch(() => {});
+  }, []);
+
+  const apiKey = data?.apiKey || "Loading...";
+
+  const copyKey = () => {
+    navigator.clipboard.writeText(apiKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold">API Keys</h1>
-          <p className="text-slate-400 text-sm mt-1">Manage your API keys and monitor usage per key.</p>
-        </div>
-        <button className="bg-brand hover:bg-brand-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">+ New Key</button>
-      </div>
-
-      <div className="space-y-3">
-        {mockKeys.map((k) => (
-          <div key={k.id} className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5 flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <span className="font-medium text-white text-sm">{k.label}</span>
-                <span className="bg-green-500/10 text-green-400 text-[10px] px-2 py-0.5 rounded-full font-medium uppercase">{k.status}</span>
-              </div>
-              <div className="font-mono text-xs text-slate-500">{k.id}</div>
-              <div className="text-xs text-slate-500 mt-1">Created {k.created} · {k.tokens} tokens used</div>
-            </div>
-            <button onClick={() => copyToClipboard(k.id)} className="text-xs border border-slate-700 hover:border-slate-500 text-slate-300 px-3 py-1.5 rounded-lg transition-colors">
-              {copied === k.id ? "Copied!" : "Copy"}
+      <h1 className="text-2xl font-bold mb-6">API Keys</h1>
+      <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="text-sm font-medium text-white">Default Key</div>
+            <div className="text-xs text-slate-400 mt-1">Created at signup</div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setKeyVisible(!keyVisible)} className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-md transition-colors">
+              {keyVisible ? "Hide" : "Show"}
+            </button>
+            <button onClick={copyKey} className="text-xs bg-brand hover:bg-brand-dark text-white px-3 py-1.5 rounded-md transition-colors">
+              {copied ? "Copied!" : "Copy"}
             </button>
           </div>
-        ))}
+        </div>
+        <code className="text-sm font-mono text-brand-light block bg-[#0f172a] rounded-lg p-4 break-all">
+          {keyVisible ? apiKey : apiKey.slice(0, 12) + "••••••••••••••••••••"}
+        </code>
+        <div className="mt-4 text-xs text-slate-500">
+          Use this key with any OpenAI-compatible client. Set <code className="text-slate-400">base_url</code> to{" "}
+          <code className="text-slate-400">https://infernest.xyz/v1</code>
+        </div>
       </div>
+      <p className="text-center text-sm text-slate-500 mt-8">
+        Back to <Link href="/dashboard" className="text-brand-light hover:underline">Dashboard</Link>
+      </p>
     </div>
   );
 }

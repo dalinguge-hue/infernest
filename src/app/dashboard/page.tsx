@@ -1,44 +1,63 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-
-const usageData = Array.from({ length: 30 }, (_, i) => ({
-  day: `Jun ${i + 1}`,
-  tokens: Math.floor(Math.random() * 500000 + 200000),
-}));
-
-const modelData = [
-  { name: "DeepSeek V4 Flash", value: 45, color: "#3b82f6" },
-  { name: "Qwen 3.6", value: 28, color: "#8b5cf6" },
-  { name: "GLM 5.2", value: 17, color: "#06b6d4" },
-  { name: "Doubao Pro", value: 10, color: "#f59e0b" },
-];
 
 export default function DashboardPage() {
   const [keyVisible, setKeyVisible] = useState(false);
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div className="max-w-6xl mx-auto px-6 py-24 text-center text-slate-400">Loading...</div>;
+  }
+
+  if (!data || data.error) {
+    return (
+      <div className="max-w-md mx-auto px-6 py-24 text-center">
+        <h1 className="text-2xl font-bold mb-4">Sign in to view dashboard</h1>
+        <Link href="/auth/login" className="text-brand-light hover:underline">Sign In</Link>
+        <span className="text-slate-500 mx-2">or</span>
+        <Link href="/auth/signup" className="text-brand-light hover:underline">Create Account</Link>
+      </div>
+    );
+  }
+
+  const usageData = Array.from({ length: 30 }, (_, i) => ({
+    day: new Date(Date.now() - (29 - i) * 86400000).toLocaleDateString("en", { month: "short", day: "numeric" }),
+    tokens: Math.floor(Math.random() * 500000 + 200000),
+  }));
+
+  const modelData = [
+    { name: "DeepSeek V4 Flash", value: 100, color: "#3b82f6" },
+  ];
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-slate-400 text-sm mt-1">Welcome back</p>
+          <p className="text-slate-400 text-sm mt-1">Welcome back, {data.username}</p>
         </div>
-        <Link href="/auth/signup" className="text-sm text-brand-light hover:underline">+ New API Key</Link>
       </div>
 
-      {/* Stats cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
-          { label: "Today", value: "1.2M", sub: "tokens" },
-          { label: "This Month", value: "28.4M", sub: "tokens" },
-          { label: "Balance", value: "$8.42", sub: "remaining" },
-          { label: "API Key", value: keyVisible ? "sk-infr-xxxx" : "sk-infr-••••", sub: "", action: () => setKeyVisible(!keyVisible), actionLabel: keyVisible ? "Hide" : "Show" },
+          { label: "Today", value: (data.todayTokens || 0).toLocaleString(), sub: "tokens" },
+          { label: "This Month", value: (data.monthTokens || 0).toLocaleString(), sub: "tokens" },
+          { label: "Balance", value: ".00", sub: "credits" },
+          { label: "API Key", value: keyVisible ? data.apiKey : data.apiKey?.slice(0, 10) + "..." || "sk-••••", sub: "", action: () => setKeyVisible(!keyVisible), actionLabel: keyVisible ? "Hide" : "Show" },
         ].map((card) => (
           <div key={card.label} className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5">
             <div className="text-xs text-slate-500 mb-1">{card.label}</div>
-            <div className="text-2xl font-bold font-mono text-white">{card.value}</div>
+            <div className="text-lg font-bold font-mono text-white truncate">{card.value}</div>
             <div className="text-xs text-slate-500 mt-0.5">
               {card.sub}
               {card.action && (
@@ -49,14 +68,13 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2 bg-[#1e293b] border border-slate-700/50 rounded-xl p-6">
           <h3 className="font-semibold mb-4 text-sm">Token Usage (30 days)</h3>
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={usageData}>
               <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} interval={6} />
-              <YAxis tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000000).toFixed(1)}M`} />
+              <YAxis tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={v => (v / 1000000).toFixed(1) + "M"} />
               <Tooltip contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "8px", fontSize: "12px" }} labelStyle={{ color: "#94a3b8" }} />
               <Line type="monotone" dataKey="tokens" stroke="#3b82f6" strokeWidth={2} dot={false} />
             </LineChart>
@@ -84,7 +102,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Quick actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link href="/dashboard/keys" className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5 hover:border-slate-600 transition-colors">
           <div className="text-sm font-medium text-white mb-1">API Keys</div>

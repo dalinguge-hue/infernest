@@ -1,82 +1,42 @@
 "use client";
-import { useState } from "react";
-
-const plans = [
-  { amount: 10, tokens: "~5M", label: "Starter" },
-  { amount: 50, tokens: "~30M", label: "Popular", highlight: true },
-  { amount: 100, tokens: "~65M", label: "Pro" },
-];
-
-const history = [
-  { date: "2026-06-20", amount: "$10.00", status: "Completed" },
-  { date: "2026-06-15", amount: "$50.00", status: "Completed" },
-];
+import { useState, useEffect } from "react";
+import Link from "next/link";
 
 export default function BillingPage() {
-  const [selected, setSelected] = useState<number | null>(null);
+  const [data, setData] = useState<any>(null);
+  useEffect(() => { fetch("/api/me").then(r => r.json()).then(setData).catch(() => {}); }, []);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
       <h1 className="text-2xl font-bold mb-2">Billing</h1>
-      <p className="text-slate-400 text-sm mb-8">Add credits to your account. Pay as you go, no subscriptions.</p>
+      <p className="text-slate-400 text-sm mb-8">Add credits to your account. 1 credit = 500,000 tokens.</p>
 
-      {/* Balance */}
-      <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-6 mb-8">
-        <div className="text-xs text-slate-500 mb-1">Current Balance</div>
-        <div className="text-3xl font-bold font-mono text-white">$8.42</div>
-      </div>
-
-      {/* Top-up plans */}
-      <h2 className="font-semibold mb-4">Add Credits</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-        {plans.map((p) => (
-          <button
-            key={p.amount}
-            onClick={() => setSelected(p.amount)}
-            className={`border rounded-xl p-5 text-left transition-all ${
-              selected === p.amount
-                ? "border-brand bg-brand/5"
-                : p.highlight
-                ? "border-slate-600 bg-[#1e293b]"
-                : "border-slate-700/50 bg-[#1e293b] hover:border-slate-600"
-            }`}
-          >
-            {p.highlight && <span className="text-[10px] bg-brand/20 text-brand-light px-2 py-0.5 rounded-full font-medium uppercase mb-2 inline-block">Most Popular</span>}
-            <div className="text-2xl font-bold text-white">${p.amount}</div>
-            <div className="text-xs text-slate-400 mt-1">{p.tokens} tokens</div>
-            <div className="text-xs text-slate-500 mt-0.5">{p.label}</div>
-          </button>
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
+        {[
+          { amount: 10, price: "", tokens: "5M" },
+          { amount: 50, price: "", tokens: "25M", popular: true },
+          { amount: 100, price: "", tokens: "50M" },
+          { amount: 500, price: "", tokens: "250M" },
+        ].map((plan) => (
+          <div key={plan.amount} className={g-[#1e293b] border rounded-xl p-5 text-center }>
+            {plan.popular && <div className="text-xs text-brand-light mb-1 font-medium">Most Popular</div>}
+            <div className="text-3xl font-bold text-white mb-1">{plan.price}</div>
+            <div className="text-xs text-slate-400 mb-3">~{plan.tokens} tokens</div>
+            <button className="w-full bg-brand hover:bg-brand-dark text-white py-2 rounded-lg text-sm font-medium transition-colors">
+              Purchase
+            </button>
+          </div>
         ))}
       </div>
 
-      {selected && (
-        <button className="w-full sm:w-auto bg-brand hover:bg-brand-dark text-white px-8 py-3 rounded-lg font-semibold transition-colors">
-          Pay ${selected}.00 with Stripe
-        </button>
-      )}
-
-      {/* History */}
-      <h2 className="font-semibold mt-12 mb-4">Payment History</h2>
-      <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-800 text-slate-400 text-xs">
-              <th className="text-left py-3 px-5 font-medium">Date</th>
-              <th className="text-left py-3 font-medium">Amount</th>
-              <th className="text-left py-3 font-medium">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {history.map((h, i) => (
-              <tr key={i} className="border-b border-slate-800/50">
-                <td className="py-3 px-5 text-slate-300">{h.date}</td>
-                <td className="py-3 font-mono text-slate-300">{h.amount}</td>
-                <td className="py-3"><span className="bg-green-500/10 text-green-400 text-[10px] px-2 py-0.5 rounded-full">{h.status}</span></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-6">
+        <h3 className="font-semibold mb-4 text-sm">Transaction History</h3>
+        <div className="text-sm text-slate-500 text-center py-8">Stripe integration coming soon. For now, credits are added manually.</div>
       </div>
+
+      <p className="text-center text-sm text-slate-500 mt-8">
+        Back to <Link href="/dashboard" className="text-brand-light hover:underline">Dashboard</Link>
+      </p>
     </div>
   );
 }
