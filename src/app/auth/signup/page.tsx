@@ -1,9 +1,10 @@
 "use client";
+import { Suspense } from "react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function SignupPage() {
+function SignupForm() {
   const searchParams = useSearchParams();
   const refCode = searchParams.get("ref") || "";
   const [email, setEmail] = useState("");
@@ -98,5 +99,13 @@ export default function SignupPage() {
         Already have an account? <Link href="/auth/login" className="text-brand-light hover:underline">Sign in</Link>
       </p>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="max-w-md mx-auto px-6 py-24 text-center text-slate-400">Loading...</div>}>
+      <SignupForm />
+    </Suspense>
   );
 }
