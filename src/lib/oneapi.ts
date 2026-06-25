@@ -1,5 +1,5 @@
 // lib/oneapi.ts - Real One-API integration
-const ONEAPI_URL = process.env.ONEAPI_URL || "http://38.47.102.235";
+const ONEAPI_URL = process.env.ONEAPI_URL || "http://38.47.102.235:3000";
 const ONEAPI_ROOT_PASS = process.env.ONEAPI_ROOT_PASSWORD || "123456";
 
 let cachedSession: string | null = null;
