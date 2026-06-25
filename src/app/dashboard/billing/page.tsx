@@ -102,14 +102,18 @@ export default function BillingPage() {
       </div>
 
       {tab === "card" ? (
-        <>
+        <div>
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
-              <div key={plan.amount} className={`bg-[#1e293b] border rounded-xl p-5 text-center flex flex-col h-full ${plan.popular ? "border-brand/50 ring-1 ring-brand/20" : "border-slate-700/50"}`}>
-              <div key={plan.amount} className={`bg-[#1e293b] border rounded-xl p-5 text-center ${plan.popular ? "border-brand/50 ring-1 ring-brand/20" : "border-slate-700/50"}`}>
+            {plans.map((plan) => (
+              <div key={plan.amount} className={`bg-[#1e293b] border rounded-xl p-5 text-center flex flex-col ${plan.popular ? "border-brand/50 ring-1 ring-brand/20" : "border-slate-700/50"}`}>
                 {plan.popular && <div className="text-xs text-brand-light mb-1 font-medium">Most Popular</div>}
                 <div className="text-3xl font-bold text-white mb-1">${plan.amount}</div>
                 <div className="text-xs text-slate-400 mb-3">~{plan.tokens} tokens</div>
-                <button onClick={() => handleStripePurchase(plan.amount)} disabled={loading === plan.amount} className="mt-auto w-full bg-brand hover:bg-brand-dark disabled:opacity-50 text-white py-2 rounded-lg text-sm font-medium transition-colors">
+                <button
+                  onClick={() => handleStripePurchase(plan.amount)}
+                  disabled={loading === plan.amount}
+                  className="mt-auto w-full bg-brand hover:bg-brand-dark disabled:opacity-50 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+                >
                   {loading === plan.amount ? "Redirecting..." : "Purchase"}
                 </button>
               </div>
@@ -123,7 +127,7 @@ export default function BillingPage() {
               <li>For custom amounts or invoicing, contact support</li>
             </ul>
           </div>
-        </>
+        </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
