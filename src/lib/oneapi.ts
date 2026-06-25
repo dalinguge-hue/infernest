@@ -118,9 +118,9 @@ export async function getUserInfo(userId: number) {
   });
   const data = await res.json();
   if (data.success && data.data) {
-    const user = Array.isArray(data.data) ? data.data[0] : data.data;
-    return { success: true, data: user };
-  }
+    const users = Array.isArray(data.data) ? data.data : [data.data];
+    const user = users.find((u: any) => u.id === userId);
+    if (user) return { success: true, data: user };
   return { success: false, message: data.message || "User not found" };
 }
 
