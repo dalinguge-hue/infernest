@@ -13,12 +13,12 @@ export default function BillingPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
         {[
-          { amount: 10, price: "", tokens: "5M" },
-          { amount: 50, price: "", tokens: "25M", popular: true },
-          { amount: 100, price: "", tokens: "50M" },
-          { amount: 500, price: "", tokens: "250M" },
+          { amount: 10, price: "$10", tokens: "5M" },
+          { amount: 50, price: "$50", tokens: "25M", popular: true },
+          { amount: 100, price: "$100", tokens: "50M" },
+          { amount: 500, price: "$500", tokens: "250M" },
         ].map((plan) => (
-          <div key={plan.amount} className={g-[#1e293b] border rounded-xl p-5 text-center }>
+          <div key={plan.amount} className={`bg-[#1e293b] border rounded-xl p-5 text-center ${plan.popular ? "border-brand/50 ring-1 ring-brand/20" : "border-slate-700/50"}`}>
             {plan.popular && <div className="text-xs text-brand-light mb-1 font-medium">Most Popular</div>}
             <div className="text-3xl font-bold text-white mb-1">{plan.price}</div>
             <div className="text-xs text-slate-400 mb-3">~{plan.tokens} tokens</div>
