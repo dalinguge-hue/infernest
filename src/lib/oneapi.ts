@@ -17,7 +17,7 @@ async function getAdminSession(): Promise<string> {
   });
 
   const setCookie = res.headers.get("set-cookie") || "";
-  const match = setCookie.match(/oneapi_session=([^;]+)/);
+  const match = setCookie.match(/session=([^;]+)/);
   if (match) {
     cachedSession = match[1];
     sessionExpiry = Date.now() + 3600000;
@@ -37,7 +37,7 @@ async function adminFetch(path: string, options: RequestInit = {}) {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      Cookie: "oneapi_session=" + session,
+      Cookie: "session=" + session,
       ...options.headers,
     },
     signal: AbortSignal.timeout(10000),
