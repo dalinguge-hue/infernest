@@ -40,7 +40,9 @@ export default function NavBar() {
           <Link href="/models" className="hover:text-white transition-colors">Models</Link>
           <Link href="/docs" className="hover:text-white transition-colors">Docs</Link>
           <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
-          {!loading && user ? (
+          {loading ? (
+            <div className="w-7 h-7 rounded-full bg-slate-700 animate-pulse" />
+          ) : user ? (
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
