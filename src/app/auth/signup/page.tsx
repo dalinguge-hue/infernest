@@ -58,7 +58,7 @@ export default function SignupPage() {
 
   return (
     <div className="max-w-md mx-auto px-6 py-24">
-      <h1 className="text-2xl font-bold mb-2">Create Account</h1>
+      <h1 className="text-2xl font-bold mb-2">Create Account v2</h1>
       <p className="text-slate-400 mb-8 text-sm">Get your API key in 30 seconds.</p>
       
       {status === "error" && (
