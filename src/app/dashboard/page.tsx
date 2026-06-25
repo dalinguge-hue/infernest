@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, 
 
 export default function DashboardPage() {
   const [keyVisible, setKeyVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,6 +31,12 @@ export default function DashboardPage() {
     );
   }
 
+  const copyKey = () => {
+    navigator.clipboard.writeText(data?.apiKey || "");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const usageData = Array.from({ length: 30 }, (_, i) => ({
     day: new Date(Date.now() - (29 - i) * 86400000).toLocaleDateString("en", { month: "short", day: "numeric" }),
     tokens: Math.floor(Math.random() * 500000 + 200000),
@@ -49,23 +56,35 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {[
-          { label: "Today", value: (data.todayTokens || 0).toLocaleString(), sub: "tokens" },
-          { label: "This Month", value: (data.monthTokens || 0).toLocaleString(), sub: "tokens" },
-          { label: "Balance", value: ".00", sub: "credits" },
-          { label: "API Key", value: keyVisible ? data.apiKey : data.apiKey?.slice(0, 10) + "..." || "sk-••••", sub: "", action: () => setKeyVisible(!keyVisible), actionLabel: keyVisible ? "Hide" : "Show" },
-        ].map((card) => (
-          <div key={card.label} className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5">
-            <div className="text-xs text-slate-500 mb-1">{card.label}</div>
-            <div className="text-lg font-bold font-mono text-white truncate">{card.value}</div>
-            <div className="text-xs text-slate-500 mt-0.5">
-              {card.sub}
-              {card.action && (
-                <button onClick={card.action} className="ml-2 text-brand-light hover:underline">{card.actionLabel}</button>
-              )}
-            </div>
+        <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5">
+          <div className="text-xs text-slate-500 mb-1">Today</div>
+          <div className="text-lg font-bold font-mono text-white">{(data.todayTokens || 0).toLocaleString()}</div>
+          <div className="text-xs text-slate-500 mt-0.5">tokens</div>
+        </div>
+        <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5">
+          <div className="text-xs text-slate-500 mb-1">This Month</div>
+          <div className="text-lg font-bold font-mono text-white">{(data.monthTokens || 0).toLocaleString()}</div>
+          <div className="text-xs text-slate-500 mt-0.5">tokens</div>
+        </div>
+        <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5">
+          <div className="text-xs text-slate-500 mb-1">Balance</div>
+          <div className="text-lg font-bold font-mono text-white">$0.00</div>
+          <div className="text-xs text-slate-500 mt-0.5">credits</div>
+        </div>
+        <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5">
+          <div className="text-xs text-slate-500 mb-1">API Key</div>
+          <div className="text-lg font-bold font-mono text-white truncate">
+            {keyVisible ? data.apiKey : "sk-••••••••••••••••"}
           </div>
-        ))}
+          <div className="flex gap-2 mt-1">
+            <button onClick={() => setKeyVisible(!keyVisible)} className="text-xs text-brand-light hover:underline">
+              {keyVisible ? "Hide" : "Show"}
+            </button>
+            <button onClick={copyKey} className="text-xs bg-brand hover:bg-brand-dark text-white px-2 py-0.5 rounded transition-colors">
+              {copied ? "Copied!" : "Copy"}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
