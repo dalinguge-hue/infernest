@@ -37,9 +37,13 @@ export default function DashboardPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const balanceTokens = data.balance || 0;
+  const usedTokens = data.usedQuota || 0;
+  const totalQuota = data.quota || 0;
+
   const usageData = Array.from({ length: 30 }, (_, i) => ({
     day: new Date(Date.now() - (29 - i) * 86400000).toLocaleDateString("en", { month: "short", day: "numeric" }),
-    tokens: Math.floor(Math.random() * 500000 + 200000),
+    tokens: usedTokens > 0 ? Math.floor(usedTokens / 30) : Math.floor(Math.random() * 500000 + 200000),
   }));
 
   const modelData = [
@@ -57,19 +61,19 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5">
-          <div className="text-xs text-slate-500 mb-1">Today</div>
-          <div className="text-lg font-bold font-mono text-white">{(data.todayTokens || 0).toLocaleString()}</div>
-          <div className="text-xs text-slate-500 mt-0.5">tokens</div>
-        </div>
-        <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5">
-          <div className="text-xs text-slate-500 mb-1">This Month</div>
-          <div className="text-lg font-bold font-mono text-white">{(data.monthTokens || 0).toLocaleString()}</div>
-          <div className="text-xs text-slate-500 mt-0.5">tokens</div>
-        </div>
-        <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5">
           <div className="text-xs text-slate-500 mb-1">Balance</div>
-          <div className="text-lg font-bold font-mono text-white">$0.00</div>
-          <div className="text-xs text-slate-500 mt-0.5">credits</div>
+          <div className="text-lg font-bold font-mono text-white">{balanceTokens.toLocaleString()}</div>
+          <div className="text-xs text-slate-500 mt-0.5">tokens available</div>
+        </div>
+        <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5">
+          <div className="text-xs text-slate-500 mb-1">Used</div>
+          <div className="text-lg font-bold font-mono text-white">{usedTokens.toLocaleString()}</div>
+          <div className="text-xs text-slate-500 mt-0.5">tokens consumed</div>
+        </div>
+        <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5">
+          <div className="text-xs text-slate-500 mb-1">Total Quota</div>
+          <div className="text-lg font-bold font-mono text-white">{totalQuota.toLocaleString()}</div>
+          <div className="text-xs text-slate-500 mt-0.5">lifetime tokens</div>
         </div>
         <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5">
           <div className="text-xs text-slate-500 mb-1">API Key</div>

@@ -73,7 +73,6 @@ export async function createToken(email: string, password: string): Promise<{ su
   const username = email.split("@")[0];
   console.log("[oneapi] Logging in as user:", username);
   
-  // Login as the actual user (not admin) so token is tied to correct account
   const loginRes = await fetch(ONEAPI_URL + "/api/user/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -91,7 +90,6 @@ export async function createToken(email: string, password: string): Promise<{ su
   const userSession = match[1];
   console.log("[oneapi] User session obtained");
 
-  // Create token using user's own session
   const tokenRes = await fetch(ONEAPI_URL + "/api/token/", {
     method: "POST",
     headers: {
@@ -110,6 +108,20 @@ export async function createToken(email: string, password: string): Promise<{ su
   }
   
   return { success: false, message: tokenData.message || "Failed to create token" };
+}
+
+export async function getUserInfo(userId: number) {
+  const session = await getAdminSession();
+  const res = await fetch(ONEAPI_URL + "/api/user/?id=" + userId, {
+    headers: { Cookie: "session=" + session },
+    signal: AbortSignal.timeout(8000),
+  });
+  const data = await res.json();
+  if (data.success && data.data) {
+    const user = Array.isArray(data.data) ? data.data[0] : data.data;
+    return { success: true, data: user };
+  }
+  return { success: false, message: data.message || "User not found" };
 }
 
 export async function getUserTokens(userId: number, adminToken: string) {
