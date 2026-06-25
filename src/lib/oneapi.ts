@@ -165,7 +165,7 @@ export async function resetUserPassword(email: string): Promise<{ success: boole
   }
 
   // Update user password in One-API
-  const updateRes = await adminFetch("/api/user/" + user.id, {
+  const updateRes = await adminFetch("/api/user/?id=" + user.id, {
     method: "PUT",
     body: JSON.stringify({ password: tempPassword }),
   });
@@ -176,3 +176,4 @@ export async function resetUserPassword(email: string): Promise<{ success: boole
 
   return { success: true, message: "Password reset successfully", tempPassword };
 }
+
