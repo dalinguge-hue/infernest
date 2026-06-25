@@ -1,21 +1,4 @@
 {
-  "functions": {
-    "api/auth/register": {
-      "regions": ["hkg1"]
-    },
-    "api/auth/login": {
-      "regions": ["hkg1"]
-    },
-    "api/auth/logout": {
-      "regions": ["hkg1"]
-    },
-    "api/me": {
-      "regions": ["hkg1"]
-    },
-    "api/stripe/webhook": {
-      "regions": ["hkg1"]
-    }
-  },
   "rewrites": [
     { "source": "/v1/:path*", "destination": "http://38.47.102.235:3000/v1/:path*" }
   ]
