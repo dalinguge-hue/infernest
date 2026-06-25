@@ -14,7 +14,7 @@ export default function NavBar() {
   }, []);
 
   return (
-    <nav className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur sticky top-0 z-50">
+    <nav className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur sticky top-0 z-50" translate="no">
       <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
         <Link href="/" className="font-bold text-lg tracking-tight">
           <span className="text-white">Infer</span><span className="text-brand">Nest</span>
@@ -22,11 +22,12 @@ export default function NavBar() {
         <div className="flex items-center gap-6 text-sm text-slate-400">
           <Link href="/models" className="hover:text-white transition-colors">Models</Link>
           <Link href="/docs" className="hover:text-white transition-colors">Docs</Link>
+          <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
           {!loading && user ? (
             <>
               <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
               <span className="text-slate-600">|</span>
-              <span className="text-slate-500 text-xs truncate max-w-[120px]" title={user.apiKey}>{user.username}</span>
+              <span className="text-slate-500 text-xs truncate max-w-[140px]" title={user.apiKey}>{user.username}</span>
             </>
           ) : (
             <>
