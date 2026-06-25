@@ -33,10 +33,44 @@ export async function POST(req: NextRequest) {
 
     if (userId) {
       try {
-        const { topUpUser } = await import("@/lib/oneapi");
-        await topUpUser(Number(userId), tokensToAdd);
+        // Fetch current quota, then add to it (not overwrite)
+        const ONEAPI_URL = process.env.ONEAPI_URL || "http://38.47.102.235";
+        const ONEAPI_ROOT_PASS = process.env.ONEAPI_ROOT_PASSWORD || "";
+
+        // Login as admin
+        const loginRes = await fetch(ONEAPI_URL + "/api/user/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: "root", password: ONEAPI_ROOT_PASS }),
+          signal: AbortSignal.timeout(8000),
+        });
+        const setCookie = loginRes.headers.get("set-cookie") || "";
+        const match = setCookie.match(/session=([^;]+)/);
+        if (!match) throw new Error("Admin login failed");
+        const adminSession = match[1];
+
+        // Get current user info
+        const userRes = await fetch(ONEAPI_URL + "/api/user/?id=" + userId, {
+          headers: { Cookie: "session=" + adminSession },
+          signal: AbortSignal.timeout(8000),
+        });
+        const userData = await userRes.json();
+        const currentQuota = userData?.data?.quota || 0;
+
+        // Set new quota = current + purchased
+        await fetch(ONEAPI_URL + "/api/user/", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: "session=" + adminSession,
+          },
+          body: JSON.stringify({ id: Number(userId), quota: currentQuota + tokensToAdd }),
+          signal: AbortSignal.timeout(8000),
+        });
+
+        console.log(`[webhook] User ${userId}: quota ${currentQuota} -> ${currentQuota + tokensToAdd}`);
       } catch (e) {
-        console.error("Failed to update quota:", e);
+        console.error("[webhook] Failed to update quota:", e);
       }
     }
   }
