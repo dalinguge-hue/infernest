@@ -33,10 +33,8 @@ export async function POST(req: NextRequest) {
 
     if (userId) {
       try {
-        const { addUserQuota, getUserQuota } = await import("@/lib/oneapi");
-        const user = await getUserQuota(Number(userId));
-        const currentQuota = user.data?.quota || 0;
-        await addUserQuota(Number(userId), currentQuota + tokensToAdd);
+        const { topUpUser } = await import("@/lib/oneapi");
+        await topUpUser(Number(userId), tokensToAdd);
       } catch (e) {
         console.error("Failed to update quota:", e);
       }
