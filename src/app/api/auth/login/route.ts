@@ -53,6 +53,9 @@ export async function POST(req: NextRequest) {
     response.cookies.set("infernest_token", token, {
       httpOnly: true, secure: true, sameSite: "lax", maxAge: 60 * 60 * 24 * 7, path: "/",
     });
+    response.cookies.set("infernest_user", JSON.stringify({ username: loginResult.username }), {
+      httpOnly: false, secure: true, sameSite: "lax", maxAge: 60 * 60 * 24 * 7, path: "/",
+    });
     return response;
   } catch (e: any) {
     console.error("[login] Error:", e.message);

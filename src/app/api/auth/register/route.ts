@@ -21,7 +21,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User created but no ID returned" }, { status: 500 });
     }
 
-    // Get user's aff_code
     let affCode = "";
     try {
       const info = await getUserInfo(userId);
@@ -30,13 +29,14 @@ export async function POST(req: NextRequest) {
       }
     } catch {}
 
-    // Create token using user's own session
     const tokenResult = await createToken(email, password);
     const key = tokenResult.data?.key || "";
 
+    const username = email.split("@")[0];
+
     const jwt = await new jose.SignJWT({
       userId,
-      username: email.split("@")[0],
+      username,
       apiKey: key,
       affCode,
     })
@@ -53,6 +53,14 @@ export async function POST(req: NextRequest) {
 
     response.cookies.set("infernest_token", jwt, {
       httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    });
+
+    response.cookies.set("infernest_user", JSON.stringify({ username }), {
+      httpOnly: false,
       secure: true,
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7,
