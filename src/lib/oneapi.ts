@@ -2,13 +2,13 @@
 const ONEAPI_URL = process.env.ONEAPI_URL || "http://38.47.102.235";
 const ONEAPI_ROOT_PASS = process.env.ONEAPI_ROOT_PASSWORD || "123456";
 
-let cachedSession: string | null = null;
-let sessionExpiry = 0;
+let cachedAdminSession: string | null = null;
+let adminSessionExpiry = 0;
 
 async function getAdminSession(): Promise<string> {
-  if (cachedSession && Date.now() < sessionExpiry) return cachedSession;
+  if (cachedAdminSession && Date.now() < adminSessionExpiry) return cachedAdminSession;
 
-  console.log("[oneapi] Logging in to", ONEAPI_URL);
+  console.log("[oneapi] Logging in as admin to", ONEAPI_URL);
   const res = await fetch(ONEAPI_URL + "/api/user/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -19,20 +19,20 @@ async function getAdminSession(): Promise<string> {
   const setCookie = res.headers.get("set-cookie") || "";
   const match = setCookie.match(/session=([^;]+)/);
   if (match) {
-    cachedSession = match[1];
-    sessionExpiry = Date.now() + 3600000;
-    console.log("[oneapi] Session obtained");
-    return cachedSession;
+    cachedAdminSession = match[1];
+    adminSessionExpiry = Date.now() + 3600000;
+    console.log("[oneapi] Admin session obtained");
+    return cachedAdminSession;
   }
   
   const body = await res.text();
-  console.error("[oneapi] Login failed:", res.status, body.slice(0, 200));
+  console.error("[oneapi] Admin login failed:", res.status, body.slice(0, 200));
   throw new Error("Failed to get admin session");
 }
 
 async function adminFetch(path: string, options: RequestInit = {}) {
   const session = await getAdminSession();
-  console.log("[oneapi] Fetching", path);
+  console.log("[oneapi] Admin fetch", path);
   const res = await fetch(ONEAPI_URL + path, {
     ...options,
     headers: {
@@ -43,7 +43,7 @@ async function adminFetch(path: string, options: RequestInit = {}) {
     signal: AbortSignal.timeout(10000),
   });
   const data = await res.json();
-  console.log("[oneapi] Response:", data.success);
+  console.log("[oneapi] Admin response:", data.success);
   return data;
 }
 
@@ -58,7 +58,6 @@ export async function createUser(email: string, password: string) {
     return { success: false, message: result.message || "Failed to create user" };
   }
   
-  // One-API create user doesnt return the ID, look it up
   const users = await adminFetch("/api/user/?p=0&page_size=50");
   if (users.success && users.data) {
     const found = users.data.find((u: any) => u.username === username);
@@ -70,11 +69,47 @@ export async function createUser(email: string, password: string) {
   return { success: false, message: "User created but ID not found" };
 }
 
-export async function createToken(userId: number, name: string, quota: number = 1000000) {
-  return adminFetch("/api/token/", {
+export async function createToken(email: string, password: string): Promise<{ success: boolean; data?: { key: string }; message?: string }> {
+  const username = email.split("@")[0];
+  console.log("[oneapi] Logging in as user:", username);
+  
+  // Login as the actual user (not admin) so token is tied to correct account
+  const loginRes = await fetch(ONEAPI_URL + "/api/user/login", {
     method: "POST",
-    body: JSON.stringify({ user_id: userId, name, remain_quota: quota }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+    signal: AbortSignal.timeout(8000),
   });
+
+  const setCookie = loginRes.headers.get("set-cookie") || "";
+  const match = setCookie.match(/session=([^;]+)/);
+  if (!match) {
+    const body = await loginRes.text();
+    console.error("[oneapi] User login failed:", loginRes.status, body.slice(0, 200));
+    return { success: false, message: "Failed to authenticate new user" };
+  }
+  const userSession = match[1];
+  console.log("[oneapi] User session obtained");
+
+  // Create token using user's own session
+  const tokenRes = await fetch(ONEAPI_URL + "/api/token/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: "session=" + userSession,
+    },
+    body: JSON.stringify({ name: "default", remain_quota: 1000000 }),
+    signal: AbortSignal.timeout(8000),
+  });
+
+  const tokenData = await tokenRes.json();
+  console.log("[oneapi] Token created:", tokenData.success);
+  
+  if (tokenData.success && tokenData.data) {
+    return { success: true, data: { key: tokenData.data.key } };
+  }
+  
+  return { success: false, message: tokenData.message || "Failed to create token" };
 }
 
 export async function getUserTokens(userId: number, adminToken: string) {

@@ -21,9 +21,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User created but no ID returned" }, { status: 500 });
     }
 
-    const tokenResult = await createToken(userId, "default", 1000000);
-    const apiKey = tokenResult.data?.key || tokenResult.data || "";
-    const key = typeof apiKey === "string" ? apiKey : "";
+    // Create token using user's own session (fixes token ownership bug)
+    const tokenResult = await createToken(email, password);
+    const key = tokenResult.data?.key || "";
 
     // Create JWT for auto-login
     const jwt = await new jose.SignJWT({
