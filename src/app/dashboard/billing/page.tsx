@@ -11,6 +11,7 @@ export default function BillingPage() {
   const [copied, setCopied] = useState(false);
   const [txid, setTxid] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [selectedCrypto, setSelectedCrypto] = useState(50);
   const verified = useRef(false);
 
   useEffect(() => {
@@ -46,11 +47,8 @@ export default function BillingPage() {
         body: JSON.stringify({ amount }),
       });
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.error || "Something went wrong");
-      }
+      if (data.url) window.location.href = data.url;
+      else alert(data.error || "Something went wrong");
     } catch {
       alert("Network error. Please try again.");
     }
@@ -63,23 +61,23 @@ export default function BillingPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-
   const handleCryptoSubmit = async () => {
     setSubmitting(true);
     try {
       const res = await fetch("/api/crypto/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: 0, txid }),
+        body: JSON.stringify({ amount: selectedCrypto, txid }),
       });
       const data = await res.json();
       setMessage(data.success ? data.message : (data.error || "Failed"));
-      setTxid("");
+      if (data.success) setTxid("");
     } catch {
       setMessage("Network error");
     }
     setSubmitting(false);
   };
+
   const plans = [
     { amount: 10, tokens: "5M", popular: false },
     { amount: 50, tokens: "25M", popular: true },
@@ -98,20 +96,9 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* Tabs */}
       <div className="flex gap-1 bg-[#1e293b] rounded-lg p-1 mb-8 w-fit">
-        <button
-          onClick={() => setTab("card")}
-          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === "card" ? "bg-brand text-white" : "text-slate-400 hover:text-white"}`}
-        >
-          Card
-        </button>
-        <button
-          onClick={() => setTab("crypto")}
-          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === "crypto" ? "bg-brand text-white" : "text-slate-400 hover:text-white"}`}
-        >
-          Crypto
-        </button>
+        <button onClick={() => setTab("card")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === "card" ? "bg-brand text-white" : "text-slate-400 hover:text-white"}`}>Card</button>
+        <button onClick={() => setTab("crypto")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === "crypto" ? "bg-brand text-white" : "text-slate-400 hover:text-white"}`}>Crypto</button>
       </div>
 
       {tab === "card" ? (
@@ -122,11 +109,7 @@ export default function BillingPage() {
                 {plan.popular && <div className="text-xs text-brand-light mb-1 font-medium">Most Popular</div>}
                 <div className="text-3xl font-bold text-white mb-1">${plan.amount}</div>
                 <div className="text-xs text-slate-400 mb-3">~{plan.tokens} tokens</div>
-                <button
-                  onClick={() => handleStripePurchase(plan.amount)}
-                  disabled={loading === plan.amount}
-                  className="w-full bg-brand hover:bg-brand-dark disabled:opacity-50 text-white py-2 rounded-lg text-sm font-medium transition-colors"
-                >
+                <button onClick={() => handleStripePurchase(plan.amount)} disabled={loading === plan.amount} className="w-full bg-brand hover:bg-brand-dark disabled:opacity-50 text-white py-2 rounded-lg text-sm font-medium transition-colors">
                   {loading === plan.amount ? "Redirecting..." : "Purchase"}
                 </button>
               </div>
@@ -147,11 +130,19 @@ export default function BillingPage() {
             <h2 className="text-lg font-semibold mb-4">Select Amount</h2>
             <div className="grid grid-cols-2 gap-3">
               {plans.map((plan) => (
-                <div key={plan.amount} className={`bg-[#1e293b] border rounded-xl p-4 ${plan.popular ? "border-brand/50 ring-1 ring-brand/20" : "border-slate-700/50"}`}>
+                <button
+                  key={plan.amount}
+                  onClick={() => setSelectedCrypto(plan.amount)}
+                  className={`text-left bg-[#1e293b] border rounded-xl p-4 w-full transition-all ${
+                    selectedCrypto === plan.amount
+                      ? "border-brand ring-2 ring-brand/30"
+                      : plan.popular ? "border-brand/50" : "border-slate-700/50 hover:border-slate-600"
+                  }`}
+                >
                   <div className="text-xs text-slate-400 mb-1">{plan.tokens} tokens</div>
                   <div className="text-2xl font-bold text-white">{plan.amount} USDT</div>
                   <div className="text-xs text-slate-500 mt-1">≈ ${plan.amount} USD</div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -163,13 +154,9 @@ export default function BillingPage() {
               <div className="bg-[#0f172a] rounded-lg p-4 mb-4">
                 <div className="text-xs text-slate-500 mb-1 font-mono break-all">{USDT_ADDRESS}</div>
               </div>
-              <button
-                onClick={copyAddress}
-                className="w-full bg-brand hover:bg-brand-dark text-white py-2 rounded-lg text-sm font-medium transition-colors mb-6"
-              >
+              <button onClick={copyAddress} className="w-full bg-brand hover:bg-brand-dark text-white py-2 rounded-lg text-sm font-medium transition-colors mb-6">
                 {copied ? "Copied!" : "Copy Address"}
               </button>
-
               <div className="border-t border-slate-700 pt-4">
                 <div className="text-xs text-slate-400 mb-2">After sending, paste your transaction ID (TXID) below:</div>
                 <input
@@ -179,7 +166,9 @@ export default function BillingPage() {
                   onChange={(e) => setTxid(e.target.value)}
                   className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-600 mb-3 focus:outline-none focus:border-brand"
                 />
-                <button onClick={handleCryptoSubmit} disabled={!txid || submitting}
+                <button
+                  onClick={handleCryptoSubmit}
+                  disabled={!selectedCrypto || !txid || submitting}
                   className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   {submitting ? "Submitting..." : "I've Sent the Payment"}
