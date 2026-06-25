@@ -50,7 +50,7 @@ async function adminFetch(path: string, options: RequestInit = {}) {
 export async function createUser(email: string, password: string) {
   return adminFetch("/api/user/", {
     method: "POST",
-    body: JSON.stringify({ username: email, password, display_name: email.split("@")[0] }),
+    body: JSON.stringify({ username: email.split('@')[0], password, display_name: email.split("@")[0] }),
   });
 }
 
