@@ -12,7 +12,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Stripe not configured" }, { status: 500 });
   }
 
-  // Get user from JWT cookie
   const token = req.cookies.get("infernest_token")?.value;
   if (!token) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -29,7 +28,6 @@ export async function POST(req: NextRequest) {
   const { amount } = await req.json();
   const amountInCents = Math.round(amount * 100);
 
-  // Dynamic import to avoid build-time issues
   const Stripe = (await import("stripe")).default;
   const stripe = new Stripe(STRIPE_SECRET);
 
@@ -40,7 +38,7 @@ export async function POST(req: NextRequest) {
           currency: "usd",
           product_data: {
             name: "InferNest API Credits",
-            description: `${(amount * 500000).toLocaleString()} tokens (~${amount * 500}K)`,
+            description: `${(amount * 500000).toLocaleString()} tokens`,
           },
           unit_amount: amountInCents,
         },
@@ -48,11 +46,12 @@ export async function POST(req: NextRequest) {
       },
     ],
     mode: "payment",
-    success_url: `${req.nextUrl.origin}/dashboard?payment=success`,
-    cancel_url: `${req.nextUrl.origin}/dashboard/billing?payment=cancelled`,
+    success_url: ${req.nextUrl.origin}/dashboard/billing?session_id={CHECKOUT_SESSION_ID},
+    cancel_url: `${req.nextUrl.origin}/dashboard/billing?cancelled=1`,
+    client_reference_id: `user_${userId}_${amount}`,
     metadata: {
-      userId: String(userId),
-      amount: String(amount),
+      user_id: String(userId),
+      tokens: String(amount * 500000),
     },
   });
 

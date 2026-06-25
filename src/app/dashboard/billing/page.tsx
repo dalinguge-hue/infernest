@@ -1,9 +1,35 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 export default function BillingPage() {
   const [loading, setLoading] = useState<number | null>(null);
+  const [message, setMessage] = useState("");
+  const verified = useRef(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    if (sessionId && !verified.current) {
+      verified.current = true;
+      setMessage("Verifying payment...");
+      fetch("/api/stripe/verify?session_id=" + sessionId)
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) {
+            setMessage("Payment confirmed! " + d.quota.toLocaleString() + " tokens available.");
+            window.history.replaceState({}, "", "/dashboard/billing");
+          } else {
+            setMessage(d.error || "Verification failed");
+          }
+        })
+        .catch(() => setMessage("Network error"));
+    }
+    if (params.get("cancelled") === "1") {
+      setMessage("Payment cancelled.");
+      window.history.replaceState({}, "", "/dashboard/billing");
+    }
+  }, []);
 
   const handlePurchase = async (amount: number) => {
     setLoading(amount);
@@ -37,6 +63,12 @@ export default function BillingPage() {
       <h1 className="text-2xl font-bold mb-2">Billing</h1>
       <p className="text-slate-400 text-sm mb-8">Add credits to your account. 1 credit = 500,000 tokens.</p>
 
+      {message && (
+        <div className="mb-6 p-3 bg-brand/10 border border-brand/30 rounded-lg text-sm text-brand-light">
+          {message}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
         {plans.map((plan) => (
           <div key={plan.amount} className={`bg-[#1e293b] border rounded-xl p-5 text-center ${plan.popular ? "border-brand/50 ring-1 ring-brand/20" : "border-slate-700/50"}`}>
@@ -57,9 +89,9 @@ export default function BillingPage() {
       <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-6">
         <h3 className="font-semibold mb-4 text-sm">Payment Info</h3>
         <ul className="text-sm text-slate-400 space-y-2">
-          <li>• Powered by <span className="text-white">Stripe</span> — secure payments, globally trusted</li>
-          <li>• Credits are added automatically after successful payment</li>
-          <li>• For custom amounts or invoicing, contact support</li>
+          <li>Powered by <span className="text-white">Stripe</span> — secure payments, globally trusted</li>
+          <li>Credits are added automatically after successful payment</li>
+          <li>For custom amounts or invoicing, contact support</li>
         </ul>
       </div>
 
