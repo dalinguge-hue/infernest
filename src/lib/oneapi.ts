@@ -8,7 +8,6 @@ let adminSessionExpiry = 0;
 async function getAdminSession(): Promise<string> {
   if (cachedAdminSession && Date.now() < adminSessionExpiry) return cachedAdminSession;
 
-  console.log("[oneapi] Logging in as admin to", ONEAPI_URL);
   const res = await fetch(ONEAPI_URL + "/api/user/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -21,7 +20,6 @@ async function getAdminSession(): Promise<string> {
   if (match) {
     cachedAdminSession = match[1];
     adminSessionExpiry = Date.now() + 3600000;
-    console.log("[oneapi] Admin session obtained");
     return cachedAdminSession;
   }
   
@@ -32,7 +30,6 @@ async function getAdminSession(): Promise<string> {
 
 async function adminFetch(path: string, options: RequestInit = {}) {
   const session = await getAdminSession();
-  console.log("[oneapi] Admin fetch", path);
   const res = await fetch(ONEAPI_URL + path, {
     ...options,
     headers: {
@@ -43,7 +40,6 @@ async function adminFetch(path: string, options: RequestInit = {}) {
     signal: AbortSignal.timeout(10000),
   });
   const data = await res.json();
-  console.log("[oneapi] Admin response:", data.success);
   return data;
 }
 
@@ -69,10 +65,9 @@ export async function createUser(email: string, password: string) {
   return { success: false, message: "User created but ID not found" };
 }
 
-export async function createToken(email: string, password: string): Promise<{ success: boolean; data?: { key: string }; message?: string }> {
+export async function createToken(email: string, password: string) {
   const username = email.split("@")[0];
-  console.log("[oneapi] Logging in as user:", username);
-  
+
   const loginRes = await fetch(ONEAPI_URL + "/api/user/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -88,7 +83,6 @@ export async function createToken(email: string, password: string): Promise<{ su
     return { success: false, message: "Failed to authenticate new user" };
   }
   const userSession = match[1];
-  console.log("[oneapi] User session obtained");
 
   const tokenRes = await fetch(ONEAPI_URL + "/api/token/", {
     method: "POST",
@@ -101,7 +95,6 @@ export async function createToken(email: string, password: string): Promise<{ su
   });
 
   const tokenData = await tokenRes.json();
-  console.log("[oneapi] Token created:", tokenData.success);
   
   if (tokenData.success && tokenData.data) {
     return { success: true, data: { key: tokenData.data.key } };
@@ -121,7 +114,8 @@ export async function getUserInfo(userId: number) {
     const users = Array.isArray(data.data) ? data.data : [data.data];
     const user = users.find((u: any) => u.id === userId);
     if (user) return { success: true, data: user };
-  return { success: false, message: data.message || "User not found" };
+  }
+  return { success: false, message: "User not found" };
 }
 
 export async function getUserTokens(userId: number, adminToken: string) {
