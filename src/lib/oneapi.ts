@@ -140,3 +140,39 @@ export async function topUpUser(userId: number, quotaAmount: number) {
     body: JSON.stringify({ quota: quotaAmount }),
   });
 }
+
+export async function resetUserPassword(email: string): Promise<{ success: boolean; message: string; tempPassword?: string }> {
+  const username = email.split("@")[0];
+
+  // Find user by username
+  const usersRes = await adminFetch("/api/user/?p=0&page_size=100");
+  if (!usersRes.success || !usersRes.data) {
+    return { success: false, message: "Unable to look up users" };
+  }
+
+  const users = Array.isArray(usersRes.data) ? usersRes.data : [usersRes.data];
+  const user = users.find((u: any) => u.username === username);
+  if (!user) {
+    // Don't reveal if user exists or not
+    return { success: false, message: "If this email is registered, a temporary password has been generated" };
+  }
+
+  // Generate temp password
+  const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  let tempPassword = "";
+  for (let i = 0; i < 10; i++) {
+    tempPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  // Update user password in One-API
+  const updateRes = await adminFetch("/api/user/" + user.id, {
+    method: "PUT",
+    body: JSON.stringify({ password: tempPassword }),
+  });
+
+  if (!updateRes.success) {
+    return { success: false, message: "Failed to reset password. Please contact support." };
+  }
+
+  return { success: true, message: "Password reset successfully", tempPassword };
+}
