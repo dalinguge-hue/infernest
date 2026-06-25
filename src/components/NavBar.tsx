@@ -49,7 +49,7 @@ export default function NavBar() {
                 <div className="w-7 h-7 rounded-full bg-brand/20 text-brand-light flex items-center justify-center text-xs font-bold">
                   {user.username.charAt(0).toUpperCase()}
                 </div>
-                <svg className={w-3 h-3 transition-transform } fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ transform: menuOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
