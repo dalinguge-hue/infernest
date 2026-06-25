@@ -109,7 +109,7 @@ export default function BillingPage() {
                 {plan.popular && <div className="text-xs text-brand-light mb-1 font-medium">Most Popular</div>}
                 <div className="text-3xl font-bold text-white mb-1">${plan.amount}</div>
                 <div className="text-xs text-slate-400 mb-3">~{plan.tokens} tokens</div>
-                <button onClick={() => handleStripePurchase(plan.amount)} disabled={loading === plan.amount} className="w-full bg-brand hover:bg-brand-dark disabled:opacity-50 text-white py-2 rounded-lg text-sm font-medium transition-colors">
+                <button onClick={() => handleStripePurchase(plan.amount)} className="mt-auto" disabled={loading === plan.amount} className="w-full bg-brand hover:bg-brand-dark disabled:opacity-50 text-white py-2 rounded-lg text-sm font-medium transition-colors">
                   {loading === plan.amount ? "Redirecting..." : "Purchase"}
                 </button>
               </div>
