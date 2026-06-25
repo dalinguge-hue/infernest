@@ -23,32 +23,32 @@ export default function PricingPage() {
         <p className="text-slate-400 max-w-xl mx-auto">Pay only for what you use. No subscriptions. 1 credit = 500,000 tokens.</p>
       </div>
 
-      {/* Prepaid packages */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
         {packages.map((pkg) => (
-          <div key={pkg.name} className={`bg-[#1e293b] border rounded-xl p-6 text-center ${pkg.popular ? "border-brand/50 ring-1 ring-brand/20" : "border-slate-700/50"}`}>
+          <Link
+            key={pkg.name}
+            href={`/dashboard/billing`}
+            className={`bg-[#1e293b] border rounded-xl p-6 text-center flex flex-col hover:border-slate-500 transition-colors ${pkg.popular ? "border-brand/50 ring-1 ring-brand/20" : "border-slate-700/50"}`}
+          >
             {pkg.popular && <div className="text-xs text-brand-light mb-2 font-semibold">MOST POPULAR</div>}
             <div className="text-sm text-slate-400 mb-2">{pkg.name}</div>
             <div className="text-3xl font-bold text-white mb-2">${pkg.price}</div>
             <div className="text-xs text-slate-500 mb-4">~{pkg.tokens} tokens</div>
-            <Link href="/dashboard/billing" className="block w-full bg-brand hover:bg-brand-dark text-white py-2 rounded-lg text-sm font-medium transition-colors">
+            <span className="mt-auto block w-full bg-brand hover:bg-brand-dark text-white py-2 rounded-lg text-sm font-medium transition-colors">
               Add Credits
-            </Link>
-          </div>
+            </span>
+          </Link>
         ))}
       </div>
 
-      {/* Model pricing table */}
       <div className="max-w-2xl mx-auto">
         <h2 className="font-semibold mb-4 text-center">Model Pricing (per 1M tokens)</h2>
         <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl overflow-hidden">
-          {/* Table header */}
           <div className="grid grid-cols-3 px-5 py-3 bg-[#0f172a] border-b border-slate-700/50 text-xs text-slate-500 font-medium">
             <span>Model</span>
             <span className="text-right">Input</span>
             <span className="text-right">Output</span>
           </div>
-          {/* Table body */}
           {modelPrices.map((m) => (
             <div key={m.name} className="grid grid-cols-3 px-5 py-3 border-b border-slate-800 last:border-b-0 text-sm items-center">
               <div className="flex items-center gap-2">
