@@ -1,6 +1,9 @@
 {
   "functions": {
-    "src/app/api/**/*.ts": {
+    "api/auth/register": {
+      "regions": ["hkg1"]
+    },
+    "api/stripe/webhook": {
       "regions": ["hkg1"]
     }
   }
